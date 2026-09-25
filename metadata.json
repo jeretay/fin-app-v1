@@ -1,0 +1,6 @@
+{
+  "name": "TickerPulse - MCP Real-Time Market & Multi-Ticker Analytics",
+  "description": "Professional multi-ticker market analytics engine powered by Model Context Protocol (MCP) data providers, featuring candlestick & normalized percentage charts, rolling volatility, and SMA/EMA technical indicators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
