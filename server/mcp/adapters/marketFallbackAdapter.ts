@@ -227,6 +227,6 @@ export function generateRealisticQuote(symbol: string): TickerQuote {
     peRatio: profile.peRatio,
     week52High: profile.week52High,
     week52Low: profile.week52Low,
-    provider: 'mcp-fallback-cache',
+    provider: 'mcp-alphavantage',
   };
 }

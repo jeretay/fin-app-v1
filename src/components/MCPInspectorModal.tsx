@@ -64,7 +64,7 @@ export const MCPInspectorModal: React.FC<MCPInspectorModalProps> = ({
         return (
           <span className="flex items-center space-x-1 px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800 text-[10px] font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-            <span>ACTIVE (HIGH-RES)</span>
+            <span>SIMULATED</span>
           </span>
         );
       case 'rate_limited':
@@ -171,7 +171,7 @@ export const MCPInspectorModal: React.FC<MCPInspectorModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between text-zinc-400">
                 <p>
-                  Connected MCP servers with automatic failover chain: <span className="text-zinc-200">Alpha Vantage MCP</span> → <span className="text-zinc-200">Twelve Data MCP</span> → <span className="text-zinc-200">High-Res Cache</span>.
+                  Connected MCP servers with automatic failover chain: <span className="text-zinc-200">Alpha Vantage MCP</span> → <span className="text-zinc-200">Twelve Data MCP</span>.
                 </p>
                 <button
                   onClick={onRefreshStatus}
@@ -249,20 +249,18 @@ export const MCPInspectorModal: React.FC<MCPInspectorModalProps> = ({
                           {isPref ? 'Preferred Provider' : 'Set as Primary'}
                         </button>
 
-                        {server.id !== 'mcp-fallback-cache' && (
-                          <button
-                            onClick={() => onToggleSimulateFailure(server.id)}
-                            className={`flex items-center space-x-1 px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
-                              isFailing
-                                ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                                : 'bg-zinc-800 text-zinc-400 hover:text-amber-300 hover:bg-zinc-700'
-                            }`}
-                            title="Simulate server outage or rate limit to test client failover"
-                          >
-                            <ShieldAlert className="w-3 h-3" />
-                            <span>{isFailing ? 'Restore Server' : 'Simulate Outage'}</span>
-                          </button>
-                        )}
+                        <button
+                          onClick={() => onToggleSimulateFailure(server.id)}
+                          className={`flex items-center space-x-1 px-2.5 py-1 rounded text-[11px] font-mono transition-colors ${
+                            isFailing
+                              ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                              : 'bg-zinc-800 text-zinc-400 hover:text-amber-300 hover:bg-zinc-700'
+                          }`}
+                          title="Simulate server outage or rate limit to test client failover"
+                        >
+                          <ShieldAlert className="w-3 h-3" />
+                          <span>{isFailing ? 'Restore Server' : 'Simulate Outage'}</span>
+                        </button>
                       </div>
                     </div>
                   );

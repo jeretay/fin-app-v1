@@ -51,17 +51,6 @@ export class MCPClientManager {
     const list: MCPServerStatus[] = [
       this.alphavantage.getStatus(),
       this.twelvedata.getStatus(),
-      {
-        id: 'mcp-fallback-cache',
-        name: 'Local Synthetic Engine & High-Res Cache',
-        transport: 'stdio',
-        commandOrUrl: 'builtin:market-cache',
-        status: 'connected',
-        latencyMs: 1,
-        requestCount: 42,
-        lastActive: new Date().toISOString(),
-        supportedTools: ['cache_get_bars', 'cache_get_quote', 'cache_intraday_tick'],
-      },
     ];
 
     // Overlay simulated failure states
@@ -155,7 +144,7 @@ export class MCPClientManager {
       }
     }
 
-    const fallbackBars = generateRealisticHistoricalBars(symbol, range, interval);
-    return { bars: fallbackBars, providerUsed: 'mcp-fallback-cache' };
+    const fallbackBars = await this.alphavantage.getHistoricalBars(symbol, range, interval);
+    return { bars: fallbackBars, providerUsed: 'mcp-alphavantage' };
   }
 }

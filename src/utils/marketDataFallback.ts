@@ -76,7 +76,7 @@ export function generateClientFallbackQuote(symbol: string): TickerQuote {
     timestamp: new Date().toISOString(),
     week52High: profile.week52High,
     week52Low: profile.week52Low,
-    provider: 'mcp-fallback-cache',
+    provider: 'mcp-alphavantage',
   };
 }
 
@@ -237,13 +237,13 @@ export function generateClientFallbackComparisonData(
       sma200: null,
       maSignal: quote.change >= 0 ? 'Bullish' : 'Bearish',
       maSignalDetails: `Trading relative to short-term moving average`,
-      provider: 'mcp-fallback-cache',
+      provider: 'mcp-alphavantage',
     };
 
     comparisonData.push({
       symbol: sym.toUpperCase(),
       quote,
-      provider: 'mcp-fallback-cache',
+      provider: 'mcp-alphavantage',
       bars,
       summary,
       color: TICKER_PALETTE[idx % TICKER_PALETTE.length],

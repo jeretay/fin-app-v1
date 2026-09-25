@@ -1,4 +1,4 @@
-export type MCPProviderId = 'mcp-alphavantage' | 'mcp-twelvedata' | 'mcp-fallback-cache';
+export type MCPProviderId = 'mcp-alphavantage' | 'mcp-twelvedata';
 
 export interface NormalizedBar {
   symbol: string;

@@ -74,17 +74,6 @@ export default function App() {
       lastActive: new Date().toISOString(),
       supportedTools: ['twelvedata_time_series', 'twelvedata_quote'],
     },
-    {
-      id: 'mcp-fallback-cache',
-      name: 'Local Synthetic Engine & High-Res Cache',
-      transport: 'stdio',
-      commandOrUrl: 'builtin:market-cache',
-      status: 'connected',
-      latencyMs: 1,
-      requestCount: 42,
-      lastActive: new Date().toISOString(),
-      supportedTools: ['cache_get_bars', 'cache_get_quote', 'cache_intraday_tick'],
-    },
   ]);
   const [preferredProvider, setPreferredProvider] = useState<string>('auto');
   const [configData, setConfigData] = useState<any>(null);
