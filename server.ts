@@ -14,6 +14,17 @@ import {
   generatePythonFastMCPScript,
 } from './server/mcp/configGenerator.ts';
 import { IndicatorConfig, TimeInterval, TimeRange } from './server/mcp/types.ts';
+import mcpHandler from './api/mcp.js';
+import {
+  getStockQuote,
+  getStockHistory,
+  getCompanyProfile,
+  getMaangOverview,
+  getMaangPrices,
+  getMaangIndicators,
+  getMaangBacktest,
+  getPortfolioAllocation,
+} from './lib/marketService.js';
 
 dotenv.config();
 
@@ -24,6 +35,101 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 app.use(express.json());
+
+// ==========================================
+// MCP Protocol Endpoint
+// ==========================================
+app.post('/api/mcp', mcpHandler);
+app.get('/api/mcp', mcpHandler);
+
+// ==========================================
+// Data Routes wrapped by MCP tools
+// ==========================================
+app.all('/api/portfolio-allocation', async (req: Request, res: Response) => {
+  try {
+    const symbol1 = (req.query.symbol1 as string) || req.body?.symbol1;
+    const symbol2 = (req.query.symbol2 as string) || req.body?.symbol2;
+    const symbol3 = (req.query.symbol3 as string) || req.body?.symbol3;
+    const symbol4 = (req.query.symbol4 as string) || req.body?.symbol4;
+    const symbol5 = (req.query.symbol5 as string) || req.body?.symbol5;
+    const result = await getPortfolioAllocation({ symbol1, symbol2, symbol3, symbol4, symbol5 });
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/stocks/quote', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'AAPL';
+    const result = await getStockQuote(symbol);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/stocks/history', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'AAPL';
+    const timeframe = (req.query.timeframe as string) || '1M';
+    const result = await getStockHistory(symbol, timeframe);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/stocks/profile', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'AAPL';
+    const result = await getCompanyProfile(symbol);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/stocks/overview', async (_req: Request, res: Response) => {
+  try {
+    const result = await getMaangOverview();
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/stocks', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'AAPL';
+    const result = await getMaangPrices(symbol);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/indicators', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'AAPL';
+    const indicator = (req.query.indicator as string) || 'ALL';
+    const result = await getMaangIndicators(symbol, indicator);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/backtest', async (req: Request, res: Response) => {
+  try {
+    const symbol = (req.query.symbol as string) || 'AAPL';
+    const strategy = (req.query.strategy as string) || 'sma_crossover';
+    const result = await getMaangBacktest(symbol, strategy);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(error.status || 500).json({ success: false, error: error.message });
+  }
+});
 
 const mcpManager = new MCPClientManager();
 
