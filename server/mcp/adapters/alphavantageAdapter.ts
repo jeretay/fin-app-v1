@@ -1,5 +1,5 @@
 import { MCPProviderId, NormalizedBar, TickerQuote, TimeInterval, TimeRange } from '../types.ts';
-import { generateRealisticHistoricalBars, generateRealisticQuote } from './marketFallbackAdapter.ts';
+import { fetchLiveMarketBars, fetchLiveMarketQuote } from '../marketDataService.ts';
 
 /**
  * Adapter for Alpha Vantage MCP Server (alphavantage-mcp)
@@ -45,53 +45,19 @@ export class AlphaVantageMCPAdapter {
     this.requestCount++;
     this.lastActive = new Date().toISOString();
 
-    if (this.apiKey !== 'demo') {
-      try {
-        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${this.apiKey}`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
-        if (res.ok) {
-          const data = await res.json();
-          if (data['Note'] || data['Information']) {
-            this.status = 'rate_limited';
-          } else if (data['Global Quote']) {
-            const g = data['Global Quote'];
-            const price = parseFloat(g['05. price']) || 100;
-            const prevClose = parseFloat(g['08. previous close']) || price;
-            const change = parseFloat(g['09. change']) || 0;
-            const changePct = parseFloat((g['10. change percent'] || '0').replace('%', '')) || 0;
-            
-            this.latencyMs = Date.now() - startTime;
-            this.status = 'connected';
-            return {
-              symbol: symbol.toUpperCase(),
-              name: `${symbol.toUpperCase()} Corp`,
-              price,
-              change,
-              changePercent: changePct,
-              open: parseFloat(g['02. open']) || price,
-              high: parseFloat(g['03. high']) || price,
-              low: parseFloat(g['04. low']) || price,
-              previousClose: prevClose,
-              volume: parseInt(g['06. volume'], 10) || 1000000,
-              timestamp: g['07. latest trading day'] || new Date().toISOString(),
-              week52High: price * 1.2,
-              week52Low: price * 0.8,
-              provider: 'mcp-alphavantage',
-            };
-          }
-        }
-      } catch {
-        // Fallback
-      }
+    try {
+      const quote = await fetchLiveMarketQuote(symbol, 'mcp-alphavantage');
+      this.latencyMs = Date.now() - startTime;
+      this.status = 'connected';
+      return {
+        ...quote,
+        provider: 'mcp-alphavantage',
+      };
+    } catch (err) {
+      this.latencyMs = Date.now() - startTime;
+      this.status = 'rate_limited';
+      throw err;
     }
-
-    this.latencyMs = Date.now() - startTime;
-    this.status = 'simulated';
-    const quote = generateRealisticQuote(symbol);
-    return {
-      ...quote,
-      provider: 'mcp-alphavantage',
-    };
   }
 
   async getHistoricalBars(
@@ -101,7 +67,7 @@ export class AlphaVantageMCPAdapter {
   ): Promise<NormalizedBar[]> {
     this.requestCount++;
     this.lastActive = new Date().toISOString();
-    // Use fallback / cached high-resolution data to respect Alpha Vantage rate limitations
-    return generateRealisticHistoricalBars(symbol, range, interval);
+    return await fetchLiveMarketBars(symbol, range, interval, 'mcp-alphavantage');
   }
 }
+

@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     'af_pf_alloc',
     {
       description:
-        'Returns calculated portfolio weights, capital allocations, and risk parity metrics for up to five equities based on historical price volatility. The underlying asset volatility and price data are computed from Yahoo Finance market data. Use this tool when an agent needs an inverse-volatility balanced portfolio allocation across two to five tickers. It does not provide automated trade execution or order routing to brokerages.',
+        'Returns calculated portfolio weights, capital allocations, and risk parity metrics for up to five equities based on historical price volatility. The underlying asset volatility and price data are computed from Twelve Data / Alpha Vantage MCP market data. Use this tool when an agent needs an inverse-volatility balanced portfolio allocation across two to five tickers. It does not provide automated trade execution or order routing to brokerages.',
       inputSchema: {
         symbol1: z.string().describe('Primary stock ticker symbol, e.g. AAPL'),
         symbol2: z.string().describe('Secondary stock ticker symbol, e.g. MSFT'),
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to calculate portfolio allocation from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to calculate portfolio allocation from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     'af_get_stock_quote',
     {
       description:
-        'Returns real-time and recent market quote metrics including current price, day change, daily high, daily low, and volume for a specified MAANG equity. The quote information is read directly from Yahoo Finance real-time quote services. Use this tool when an agent needs current price and daily price change metrics for META, AAPL, AMZN, NFLX, or GOOGL. It does not provide historical OHLCV chart bars or multi-day time series.',
+        'Returns real-time and recent market quote metrics including current price, day change, daily high, daily low, and volume for a specified MAANG equity. The quote information is read directly from Twelve Data / Alpha Vantage MCP real-time quote services. Use this tool when an agent needs current price and daily price change metrics for META, AAPL, AMZN, NFLX, or GOOGL. It does not provide historical OHLCV chart bars or multi-day time series.',
       inputSchema: {
         symbol: z.string().describe('MAANG stock ticker symbol: META, AAPL, AMZN, NFLX, or GOOGL'),
       },
@@ -104,7 +104,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to fetch stock quote for ${symbol} from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to fetch stock quote for ${symbol} from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
     'af_get_stock_history',
     {
       description:
-        'Returns historical OHLCV price performance time-series data for a specified stock ticker over a designated timeframe. The historical bar data is read directly from Yahoo Finance market chart endpoints. Use this tool when an agent needs chronological candlestick or closing price history for asset trend evaluation. It does not stream live order book depth or Level 2 bid-ask spreads.',
+        'Returns historical OHLCV price performance time-series data for a specified stock ticker over a designated timeframe. The historical bar data is read directly from Twelve Data / Alpha Vantage MCP market chart endpoints. Use this tool when an agent needs chronological candlestick or closing price history for asset trend evaluation. It does not stream live order book depth or Level 2 bid-ask spreads.',
       inputSchema: {
         symbol: z.string().describe('Stock ticker symbol to retrieve historical data for (e.g. AAPL, META, AMZN, NFLX, GOOGL)'),
         timeframe: z.string().describe('Historical timeframe interval such as 1D, 5D, 1M, 6M, 1Y, or 5Y'),
@@ -135,7 +135,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to fetch stock history for ${symbol} over timeframe ${timeframe} from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to fetch stock history for ${symbol} over timeframe ${timeframe} from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
     'af_get_company_profile',
     {
       description:
-        'Returns company profile details, industry sector classification, exchange listing, and fundamental metrics for a MAANG company. The corporate and trading information is read directly from Yahoo Finance company profile services. Use this tool when an agent needs business description, sector categorization, or fundamental overview for a MAANG stock. It does not track real-time SEC regulatory filings or insider trade reports.',
+        'Returns company profile details, industry sector classification, exchange listing, and fundamental metrics for a MAANG company. The corporate and trading information is read directly from Twelve Data / Alpha Vantage MCP company profile services. Use this tool when an agent needs business description, sector categorization, or fundamental overview for a MAANG stock. It does not track real-time SEC regulatory filings or insider trade reports.',
       inputSchema: {
         symbol: z.string().describe('MAANG stock ticker symbol: META, AAPL, AMZN, NFLX, or GOOGL'),
       },
@@ -165,7 +165,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to fetch company profile for ${symbol} from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to fetch company profile for ${symbol} from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -178,7 +178,7 @@ export default async function handler(req, res) {
     'af_get_maang_overview',
     {
       description:
-        'Returns a consolidated summary matrix of live prices, percentage changes, and key daily trading metrics across all five MAANG stocks. The aggregated matrix is read directly from Yahoo Finance market quote services. Use this tool when an agent needs a high-level comparative snapshot of all MAANG equities at once. It does not cover non-MAANG equities or macroeconomic treasury yields.',
+        'Returns a consolidated summary matrix of live prices, percentage changes, and key daily trading metrics across all five MAANG stocks. The aggregated matrix is read directly from Twelve Data / Alpha Vantage MCP market quote services. Use this tool when an agent needs a high-level comparative snapshot of all MAANG equities at once. It does not cover non-MAANG equities or macroeconomic treasury yields.',
       inputSchema: {},
       annotations: { readOnlyHint: true, openWorldHint: true },
     },
@@ -193,7 +193,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to fetch MAANG overview from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to fetch MAANG overview from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -206,7 +206,7 @@ export default async function handler(req, res) {
     'af_maang_prices',
     {
       description:
-        'Returns live and historical price data for a given MAANG stock including Meta, Apple, Amazon, Netflix, and Google. The result comes from upstream market APIs provided by Yahoo Finance. Use this tool when an agent needs raw OHLC data for analysis. It does not cover non-MAANG stocks or crypto.',
+        'Returns live and historical price data for a given MAANG stock including Meta, Apple, Amazon, Netflix, and Google. The result comes from upstream market APIs provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs raw OHLC data for analysis. It does not cover non-MAANG stocks or crypto.',
       inputSchema: {
         symbol: z.string().describe('MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)'),
       },
@@ -223,7 +223,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to fetch MAANG prices for ${symbol} from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to fetch MAANG prices for ${symbol} from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -236,7 +236,7 @@ export default async function handler(req, res) {
     'af_maang_indicators',
     {
       description:
-        'Returns calculated technical indicators such as RSI, MACD, SMA50, and SMA200 for a given MAANG stock. The result is computed from upstream market data provided by Yahoo Finance. Use this tool when an agent needs to detect overbought or oversold conditions or trend shifts. It does not cover fundamental metrics like earnings or revenue.',
+        'Returns calculated technical indicators such as RSI, MACD, SMA50, and SMA200 for a given MAANG stock. The result is computed from upstream market data provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs to detect overbought or oversold conditions or trend shifts. It does not cover fundamental metrics like earnings or revenue.',
       inputSchema: {
         symbol: z.string().describe('MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)'),
         indicator: z.string().describe('Technical indicator to calculate: RSI, MACD, SMA50, SMA200, or ALL'),
@@ -254,7 +254,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to calculate ${indicator} technical indicator for ${symbol} from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to calculate ${indicator} technical indicator for ${symbol} from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };
@@ -267,7 +267,7 @@ export default async function handler(req, res) {
     'af_maang_backtest',
     {
       description:
-        'Returns backtest results on historical MAANG stock data using a chosen strategy such as SMA crossover, RSI thresholds, or MACD crossover. The result is simulated locally from upstream market data provided by Yahoo Finance. Use this tool when an agent needs to validate signals historically. It does not cover live trading or execution.',
+        'Returns backtest results on historical MAANG stock data using a chosen strategy such as SMA crossover, RSI thresholds, or MACD crossover. The result is simulated locally from upstream market data provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs to validate signals historically. It does not cover live trading or execution.',
       inputSchema: {
         symbol: z.string().describe('MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)'),
         strategy: z.string().describe('Backtest trading strategy: sma_crossover, rsi_threshold, or macd_crossover'),
@@ -285,7 +285,7 @@ export default async function handler(req, res) {
           content: [
             {
               type: 'text',
-              text: `Failed to execute ${strategy} backtest for ${symbol} from Yahoo Finance upstream with status ${status}.`,
+              text: `Failed to execute ${strategy} backtest for ${symbol} from Twelve Data / Alpha Vantage MCP upstream with status ${status}.`,
             },
           ],
         };

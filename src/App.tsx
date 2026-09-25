@@ -123,7 +123,7 @@ export default function App() {
     try {
       // 1. Fetch real-time batch quotes with timeout
       const quotePromise = fetch(`/api/market/quote?symbols=${selectedSymbols.join(',')}`, {
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(8000),
       })
         .then((r) => (r.ok ? r.json() : null))
         .then((json) => {
@@ -138,7 +138,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbols: selectedSymbols, range, interval }),
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (compRes.ok) {

@@ -1,5 +1,5 @@
 import { MCPProviderId, NormalizedBar, TickerQuote, TimeInterval, TimeRange } from '../types.ts';
-import { generateRealisticHistoricalBars, generateRealisticQuote } from './marketFallbackAdapter.ts';
+import { fetchLiveMarketBars, fetchLiveMarketQuote } from '../marketDataService.ts';
 
 /**
  * Adapter for Twelve Data & Financial Modeling Prep MCP Servers
@@ -37,13 +37,23 @@ export class TwelveDataMCPAdapter {
   }
 
   async getQuote(symbol: string): Promise<TickerQuote> {
+    const startTime = Date.now();
     this.requestCount++;
     this.lastActive = new Date().toISOString();
-    const fallback = generateRealisticQuote(symbol);
-    return {
-      ...fallback,
-      provider: 'mcp-twelvedata',
-    };
+
+    try {
+      const quote = await fetchLiveMarketQuote(symbol, 'mcp-twelvedata');
+      this.latencyMs = Date.now() - startTime;
+      this.status = 'connected';
+      return {
+        ...quote,
+        provider: 'mcp-twelvedata',
+      };
+    } catch (err) {
+      this.latencyMs = Date.now() - startTime;
+      this.status = 'degraded';
+      throw err;
+    }
   }
 
   async getHistoricalBars(
@@ -53,6 +63,7 @@ export class TwelveDataMCPAdapter {
   ): Promise<NormalizedBar[]> {
     this.requestCount++;
     this.lastActive = new Date().toISOString();
-    return generateRealisticHistoricalBars(symbol, range, interval);
+    return await fetchLiveMarketBars(symbol, range, interval, 'mcp-twelvedata');
   }
 }
+
