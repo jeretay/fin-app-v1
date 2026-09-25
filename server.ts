@@ -39,8 +39,7 @@ app.use(express.json());
 // ==========================================
 // MCP Protocol Endpoint
 // ==========================================
-app.post('/api/mcp', mcpHandler);
-app.get('/api/mcp', mcpHandler);
+app.all('/api/mcp', mcpHandler);
 
 // ==========================================
 // Data Routes wrapped by MCP tools

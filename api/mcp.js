@@ -1,6 +1,6 @@
 /**
  * MCP Server Handler for /api/mcp
- * Protocol: MCP 2025-11-25 over Streamable HTTP
+ * Protocol: MCP 2025-11-25 over Streamable HTTP & SSE
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -17,28 +17,259 @@ import {
   getPortfolioAllocation,
 } from '../lib/marketService.js';
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    const errorPayload = {
-      jsonrpc: '2.0',
-      error: {
-        code: -32000,
-        message: 'Method not allowed',
+export const TOOLS_MANIFEST = [
+  {
+    name: 'af_pf_alloc',
+    description:
+      'Returns calculated portfolio weights, capital allocations, and risk parity metrics for up to five equities based on historical price volatility. The underlying asset volatility and price data are computed from Twelve Data / Alpha Vantage MCP market data. Use this tool when an agent needs an inverse-volatility balanced portfolio allocation across two to five tickers. It does not provide automated trade execution or order routing to brokerages.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol1: { type: 'string', description: 'Primary stock ticker symbol, e.g. AAPL' },
+        symbol2: { type: 'string', description: 'Secondary stock ticker symbol, e.g. MSFT' },
+        symbol3: { type: 'string', description: 'Third optional stock ticker symbol, e.g. GOOGL' },
+        symbol4: { type: 'string', description: 'Fourth optional stock ticker symbol, e.g. AMZN' },
+        symbol5: { type: 'string', description: 'Fifth optional stock ticker symbol, e.g. META' },
       },
-      id: null,
-    };
+      required: ['symbol1', 'symbol2'],
+    },
+  },
+  {
+    name: 'af_get_stock_quote',
+    description:
+      'Returns real-time and recent market quote metrics including current price, day change, daily high, daily low, and volume for a specified MAANG equity. The quote information is read directly from Twelve Data / Alpha Vantage MCP real-time quote services. Use this tool when an agent needs current price and daily price change metrics for META, AAPL, AMZN, NFLX, or GOOGL. It does not provide historical OHLCV chart bars or multi-day time series.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol: { type: 'string', description: 'MAANG stock ticker symbol: META, AAPL, AMZN, NFLX, or GOOGL' },
+      },
+      required: ['symbol'],
+    },
+  },
+  {
+    name: 'af_get_stock_history',
+    description:
+      'Returns historical OHLCV price performance time-series data for a specified stock ticker over a designated timeframe. The historical bar data is read directly from Twelve Data / Alpha Vantage MCP market chart endpoints. Use this tool when an agent needs chronological candlestick or closing price history for asset trend evaluation. It does not stream live order book depth or Level 2 bid-ask spreads.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol: { type: 'string', description: 'Stock ticker symbol to retrieve historical data for (e.g. AAPL, META, AMZN, NFLX, GOOGL)' },
+        timeframe: { type: 'string', description: 'Historical timeframe interval such as 1D, 5D, 1M, 6M, 1Y, or 5Y' },
+      },
+      required: ['symbol', 'timeframe'],
+    },
+  },
+  {
+    name: 'af_get_company_profile',
+    description:
+      'Returns company profile details, industry sector classification, exchange listing, and fundamental metrics for a MAANG company. The corporate and trading information is read directly from Twelve Data / Alpha Vantage MCP company profile services. Use this tool when an agent needs business description, sector categorization, or fundamental overview for a MAANG stock. It does not track real-time SEC regulatory filings or insider trade reports.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol: { type: 'string', description: 'MAANG stock ticker symbol: META, AAPL, AMZN, NFLX, or GOOGL' },
+      },
+      required: ['symbol'],
+    },
+  },
+  {
+    name: 'af_get_maang_overview',
+    description:
+      'Returns a consolidated summary matrix of live prices, percentage changes, and key daily trading metrics across all five MAANG stocks. The aggregated matrix is read directly from Twelve Data / Alpha Vantage MCP market quote services. Use this tool when an agent needs a high-level comparative snapshot of all MAANG equities at once. It does not cover non-MAANG equities or macroeconomic treasury yields.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'af_maang_prices',
+    description:
+      'Returns live and historical price data for a given MAANG stock including Meta, Apple, Amazon, Netflix, and Google. The result comes from upstream market APIs provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs raw OHLC data for analysis. It does not cover non-MAANG stocks or crypto.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol: { type: 'string', description: 'MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)' },
+      },
+      required: ['symbol'],
+    },
+  },
+  {
+    name: 'af_maang_indicators',
+    description:
+      'Returns calculated technical indicators such as RSI, MACD, SMA50, and SMA200 for a given MAANG stock. The result is computed from upstream market data provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs to detect overbought or oversold conditions or trend shifts. It does not cover fundamental metrics like earnings or revenue.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol: { type: 'string', description: 'MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)' },
+        indicator: { type: 'string', description: 'Technical indicator to calculate: RSI, MACD, SMA50, SMA200, or ALL' },
+      },
+      required: ['symbol'],
+    },
+  },
+  {
+    name: 'af_maang_backtest',
+    description:
+      'Returns backtest results on historical MAANG stock data using a chosen strategy such as SMA crossover, RSI thresholds, or macd_crossover. The result is simulated locally from upstream market data provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs to validate signals historically. It does not cover live trading or execution.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        symbol: { type: 'string', description: 'MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)' },
+        strategy: { type: 'string', description: 'Backtest trading strategy: sma_crossover, rsi_threshold, or macd_crossover' },
+      },
+      required: ['symbol', 'strategy'],
+    },
+  },
+];
 
-    if (typeof res.status === 'function') {
-      res.status(405);
-      if (typeof res.json === 'function') {
-        res.json(errorPayload);
+export default async function handler(req, res) {
+  // 1. CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
+  // 2. Handle GET and HEAD requests gracefully
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const query = req.query || Object.fromEntries(urlObj.searchParams.entries());
+
+    // 2a. Query param method=tools/list
+    if (query.method === 'tools/list') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          id: query.id || 1,
+          result: { tools: TOOLS_MANIFEST },
+        })
+      );
+      return;
+    }
+
+    // 2b. Query param method=ping
+    if (query.method === 'ping') {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ jsonrpc: '2.0', id: query.id || 1, result: {} }));
+      return;
+    }
+
+    // 2c. Direct tool execution via query param (e.g. ?tool=af_get_stock_quote&symbol=AAPL)
+    if (query.tool) {
+      res.setHeader('Content-Type', 'application/json');
+      try {
+        let result;
+        const toolName = query.tool;
+        if (toolName === 'af_get_stock_quote') {
+          result = await getStockQuote(query.symbol || 'AAPL');
+        } else if (toolName === 'af_get_stock_history') {
+          result = await getStockHistory(query.symbol || 'AAPL', query.timeframe || '1M');
+        } else if (toolName === 'af_get_company_profile') {
+          result = await getCompanyProfile(query.symbol || 'AAPL');
+        } else if (toolName === 'af_get_maang_overview') {
+          result = await getMaangOverview();
+        } else if (toolName === 'af_maang_prices') {
+          result = await getMaangPrices(query.symbol || 'AAPL');
+        } else if (toolName === 'af_maang_indicators') {
+          result = await getMaangIndicators(query.symbol || 'AAPL', query.indicator || 'ALL');
+        } else if (toolName === 'af_maang_backtest') {
+          result = await getMaangBacktest(query.symbol || 'AAPL', query.strategy || 'sma_crossover');
+        } else if (toolName === 'af_pf_alloc') {
+          result = await getPortfolioAllocation({
+            symbol1: query.symbol1 || 'AAPL',
+            symbol2: query.symbol2 || 'MSFT',
+            symbol3: query.symbol3,
+            symbol4: query.symbol4,
+            symbol5: query.symbol5,
+          });
+        } else {
+          res.statusCode = 404;
+          res.end(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              error: { code: -32601, message: `Tool ${toolName} not found` },
+              id: query.id || null,
+            })
+          );
+          return;
+        }
+
+        res.end(
+          JSON.stringify({
+            jsonrpc: '2.0',
+            id: query.id || 1,
+            result: {
+              content: [{ type: 'text', text: JSON.stringify(result) }],
+            },
+          })
+        );
+        return;
+      } catch (err) {
+        res.statusCode = err.status || 500;
+        res.end(
+          JSON.stringify({
+            jsonrpc: '2.0',
+            error: { code: -32000, message: err.message },
+            id: query.id || null,
+          })
+        );
         return;
       }
-    } else {
-      res.statusCode = 405;
     }
+
+    // 2d. SSE stream request
+    if (req.headers.accept?.includes('text/event-stream')) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+      res.write(`event: endpoint\ndata: ${JSON.stringify({ url: '/api/mcp' })}\n\n`);
+      return;
+    }
+
+    // 2e. Default GET: Return active server status and tools catalog
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(errorPayload));
+    res.end(
+      JSON.stringify(
+        {
+          status: 'online',
+          server: 'app-fin-v1-server',
+          version: '1.0.0',
+          protocol: 'mcp-2025-11-25',
+          transport: 'streamable-http',
+          description: 'Model Context Protocol (MCP) server for financial market data and portfolio analytics',
+          endpoints: {
+            rpc: 'POST /api/mcp',
+            sse: 'GET /api/mcp (Accept: text/event-stream)',
+            query: 'GET /api/mcp?method=tools/list or ?tool=<tool_name>&<param>=<value>',
+          },
+          supportedMethods: ['initialize', 'tools/list', 'tools/call', 'ping'],
+          tools: TOOLS_MANIFEST,
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  // 3. Handle POST requests via MCP Server
+  // If POST body is empty or null, return helpful discovery metadata
+  if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
+    res.setHeader('Content-Type', 'application/json');
+    res.end(
+      JSON.stringify({
+        status: 'online',
+        server: 'app-fin-v1-server',
+        version: '1.0.0',
+        message: 'Send a valid JSON-RPC 2.0 object to execute MCP commands (e.g. initialize, tools/list, tools/call)',
+        tools: TOOLS_MANIFEST.map((t) => t.name),
+      })
+    );
     return;
   }
 
@@ -267,7 +498,7 @@ export default async function handler(req, res) {
     'af_maang_backtest',
     {
       description:
-        'Returns backtest results on historical MAANG stock data using a chosen strategy such as SMA crossover, RSI thresholds, or MACD crossover. The result is simulated locally from upstream market data provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs to validate signals historically. It does not cover live trading or execution.',
+        'Returns backtest results on historical MAANG stock data using a chosen strategy such as SMA crossover, RSI thresholds, or macd_crossover. The result is simulated locally from upstream market data provided by Twelve Data / Alpha Vantage MCP. Use this tool when an agent needs to validate signals historically. It does not cover live trading or execution.',
       inputSchema: {
         symbol: z.string().describe('MAANG stock ticker symbol (META, AAPL, AMZN, NFLX, or GOOGL)'),
         strategy: z.string().describe('Backtest trading strategy: sma_crossover, rsi_threshold, or macd_crossover'),
