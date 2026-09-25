@@ -18,14 +18,14 @@ import {
 } from '../lib/marketService.js';
 
 export default async function handler(req, res) {
-  // if (req.method !== 'POST') {
-  //   const errorPayload = {
-  //     jsonrpc: '2.0',
-  //     error: {
-  //       code: -32000,
-  //       message: 'Method not allowed',
-  //     },
-  //     id: null,
+  if (req.method !== 'POST') {
+    const errorPayload = {
+      jsonrpc: '2.0',
+      error: {
+        code: -32000,
+        message: 'Method not allowed',
+      },
+      id: null,
     };
 
     if (typeof res.status === 'function') {
