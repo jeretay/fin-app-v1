@@ -15,6 +15,7 @@ import {
 } from './server/mcp/configGenerator.ts';
 import { IndicatorConfig, TimeInterval, TimeRange } from './server/mcp/types.ts';
 import mcpHandler from './api/mcp.js';
+import askHandler from './api/ask.js';
 import {
   getStockQuote,
   getStockHistory,
@@ -40,6 +41,7 @@ app.use(express.json());
 // MCP Protocol Endpoint
 // ==========================================
 app.all('/api/mcp', mcpHandler);
+app.post('/api/ask', askHandler);
 
 // ==========================================
 // Data Routes wrapped by MCP tools

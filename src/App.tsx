@@ -5,6 +5,7 @@ import { Toolbar } from './components/Toolbar.tsx';
 import { InteractiveChart } from './components/InteractiveChart.tsx';
 import { PortfolioAllocationPanel } from './components/PortfolioAllocationPanel.tsx';
 import { SummaryStatisticsPanel } from './components/SummaryStatisticsPanel.tsx';
+import { AskPanel } from './components/AskPanel.tsx';
 import { MCPInspectorModal } from './components/MCPInspectorModal.tsx';
 import { ExportModal } from './components/ExportModal.tsx';
 import {
@@ -354,6 +355,9 @@ export default function App() {
             }
           }}
         />
+
+        {/* AI Agent Ask Panel */}
+        <AskPanel />
 
         {/* Summary Statistics Matrix Panel */}
         <SummaryStatisticsPanel
