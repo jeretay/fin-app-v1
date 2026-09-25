@@ -171,7 +171,7 @@ export const MCPInspectorModal: React.FC<MCPInspectorModalProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between text-zinc-400">
                 <p>
-                  Connected MCP servers with automatic failover chain: <span className="text-zinc-200">Yahoo Finance MCP</span> → <span className="text-zinc-200">Alpha Vantage MCP</span> → <span className="text-zinc-200">Twelve Data MCP</span> → <span className="text-zinc-200">High-Res Cache</span>.
+                  Connected MCP servers with automatic failover chain: <span className="text-zinc-200">Alpha Vantage MCP</span> → <span className="text-zinc-200">Twelve Data MCP</span> → <span className="text-zinc-200">High-Res Cache</span>.
                 </p>
                 <button
                   onClick={onRefreshStatus}
@@ -301,7 +301,7 @@ export const MCPInspectorModal: React.FC<MCPInspectorModalProps> = ({
                 <div>
                   <h3 className="font-semibold text-zinc-200">Official @modelcontextprotocol/sdk Setup Script</h3>
                   <p className="text-zinc-400 text-xs">
-                    Connects directly to the Yahoo Finance MCP server using Node.js STDIO transport.
+                    Connects directly to the Alpha Vantage MCP server using Node.js STDIO transport.
                   </p>
                 </div>
                 <button

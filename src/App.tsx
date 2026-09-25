@@ -53,17 +53,6 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [serverStatuses, setServerStatuses] = useState<MCPServerStatus[]>([
     {
-      id: 'mcp-yfinance',
-      name: 'Yahoo Finance MCP (mcp-server-yfinance)',
-      transport: 'stdio',
-      commandOrUrl: 'uvx mcp-server-yfinance',
-      status: 'connected',
-      latencyMs: 24,
-      requestCount: 1,
-      lastActive: new Date().toISOString(),
-      supportedTools: ['yfinance_get_quote', 'yfinance_get_historical_ohlcv', 'yfinance_get_dividends_splits'],
-    },
-    {
       id: 'mcp-alphavantage',
       name: 'Alpha Vantage MCP (alphavantage-mcp)',
       transport: 'stdio',

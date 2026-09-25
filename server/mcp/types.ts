@@ -33,7 +33,7 @@ export interface TickerQuote {
   provider: MCPProviderId;
 }
 
-export type MCPProviderId = 'mcp-yfinance' | 'mcp-alphavantage' | 'mcp-twelvedata' | 'mcp-fallback-cache';
+export type MCPProviderId = 'mcp-alphavantage' | 'mcp-twelvedata' | 'mcp-fallback-cache';
 
 export interface MCPServerStatus {
   id: MCPProviderId;

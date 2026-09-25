@@ -6,13 +6,11 @@ import {
   TimeInterval,
   TimeRange,
 } from './types.ts';
-import { YFinanceMCPAdapter } from './adapters/yfinanceAdapter.ts';
 import { AlphaVantageMCPAdapter } from './adapters/alphavantageAdapter.ts';
 import { TwelveDataMCPAdapter } from './adapters/twelveDataAdapter.ts';
 import { generateRealisticHistoricalBars, generateRealisticQuote } from './adapters/marketFallbackAdapter.ts';
 
 export class MCPClientManager {
-  private yfinance: YFinanceMCPAdapter;
   private alphavantage: AlphaVantageMCPAdapter;
   private twelvedata: TwelveDataMCPAdapter;
 
@@ -20,7 +18,6 @@ export class MCPClientManager {
   private simulatedFailures: Set<MCPProviderId> = new Set();
 
   constructor() {
-    this.yfinance = new YFinanceMCPAdapter();
     this.alphavantage = new AlphaVantageMCPAdapter();
     this.twelvedata = new TwelveDataMCPAdapter();
   }
@@ -52,7 +49,6 @@ export class MCPClientManager {
    */
   getAllServerStatuses(): MCPServerStatus[] {
     const list: MCPServerStatus[] = [
-      this.yfinance.getStatus(),
       this.alphavantage.getStatus(),
       this.twelvedata.getStatus(),
       {
@@ -87,8 +83,8 @@ export class MCPClientManager {
   async getQuote(symbol: string): Promise<TickerQuote> {
     const candidateProviders: MCPProviderId[] =
       this.preferredProvider === 'auto'
-        ? ['mcp-yfinance', 'mcp-alphavantage', 'mcp-twelvedata']
-        : [this.preferredProvider, 'mcp-yfinance', 'mcp-alphavantage', 'mcp-twelvedata'];
+        ? ['mcp-alphavantage', 'mcp-twelvedata']
+        : [this.preferredProvider, 'mcp-alphavantage', 'mcp-twelvedata'];
 
     for (const providerId of candidateProviders) {
       if (this.simulatedFailures.has(providerId)) {
@@ -96,9 +92,7 @@ export class MCPClientManager {
       }
 
       try {
-        if (providerId === 'mcp-yfinance') {
-          return await this.yfinance.getQuote(symbol);
-        } else if (providerId === 'mcp-alphavantage') {
+        if (providerId === 'mcp-alphavantage') {
           return await this.alphavantage.getQuote(symbol);
         } else if (providerId === 'mcp-twelvedata') {
           return await this.twelvedata.getQuote(symbol);
@@ -136,8 +130,8 @@ export class MCPClientManager {
   ): Promise<{ bars: NormalizedBar[]; providerUsed: MCPProviderId }> {
     const candidateProviders: MCPProviderId[] =
       this.preferredProvider === 'auto'
-        ? ['mcp-yfinance', 'mcp-alphavantage', 'mcp-twelvedata']
-        : [this.preferredProvider, 'mcp-yfinance', 'mcp-alphavantage'];
+        ? ['mcp-alphavantage', 'mcp-twelvedata']
+        : [this.preferredProvider, 'mcp-alphavantage', 'mcp-twelvedata'];
 
     for (const providerId of candidateProviders) {
       if (this.simulatedFailures.has(providerId)) {
@@ -145,12 +139,7 @@ export class MCPClientManager {
       }
 
       try {
-        if (providerId === 'mcp-yfinance') {
-          const bars = await this.yfinance.getHistoricalBars(symbol, range, interval);
-          if (bars && bars.length > 0) {
-            return { bars, providerUsed: 'mcp-yfinance' };
-          }
-        } else if (providerId === 'mcp-alphavantage') {
+        if (providerId === 'mcp-alphavantage') {
           const bars = await this.alphavantage.getHistoricalBars(symbol, range, interval);
           if (bars && bars.length > 0) {
             return { bars, providerUsed: 'mcp-alphavantage' };

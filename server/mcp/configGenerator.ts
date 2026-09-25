@@ -15,13 +15,6 @@ export interface MCPClaudeConfig {
 export function generateClaudeDesktopConfig(alphavantageKey: string = 'YOUR_ALPHAVANTAGE_API_KEY'): MCPClaudeConfig {
   return {
     mcpServers: {
-      'yfinance': {
-        command: 'uvx',
-        args: ['mcp-server-yfinance'],
-        env: {
-          YFINANCE_CACHE_DIR: '~/.cache/yfinance',
-        },
-      },
       'alphavantage': {
         command: 'npx',
         args: ['-y', '@modelcontextprotocol/server-alphavantage'],
@@ -45,10 +38,13 @@ export function generateNodeSDKClientScript(): string {
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 async function main() {
-  // 1. Initialize STDIO transport to Yahoo Finance MCP Server
+  // 1. Initialize STDIO transport to Alpha Vantage MCP Server
   const transport = new StdioClientTransport({
-    command: "uvx",
-    args: ["mcp-server-yfinance"],
+    command: "npx",
+    args: ["-y", "@modelcontextprotocol/server-alphavantage"],
+    env: {
+      ALPHAVANTAGE_API_KEY: process.env.ALPHAVANTAGE_API_KEY || "DEMO",
+    },
   });
 
   const client = new Client({
@@ -63,7 +59,7 @@ async function main() {
   });
 
   await client.connect(transport);
-  console.log("Connected to Yahoo Finance MCP Server!");
+  console.log("Connected to Alpha Vantage MCP Server!");
 
   // 2. Discover available tools
   const tools = await client.listTools();
@@ -71,7 +67,7 @@ async function main() {
 
   // 3. Call tool to fetch quote
   const quoteResult = await client.callTool({
-    name: "yfinance_get_quote",
+    name: "alphavantage_GLOBAL_QUOTE",
     arguments: { symbol: "NVDA" },
   });
 
@@ -86,13 +82,14 @@ export function generatePythonFastMCPScript(): string {
 from mcp.client.stdio import stdio_client
 import asyncio
 import json
+import os
 
 async def run_market_query(symbol: str = "AAPL"):
     # Configure MCP server parameters
     server_params = StdioServerParameters(
-        command="uvx",
-        args=["mcp-server-yfinance"],
-        env=None
+        command="npx",
+        args=["-y", "@modelcontextprotocol/server-alphavantage"],
+        env={"ALPHAVANTAGE_API_KEY": os.environ.get("ALPHAVANTAGE_API_KEY", "DEMO")}
     )
 
     async with stdio_client(server_params) as (read, write):
@@ -103,13 +100,13 @@ async def run_market_query(symbol: str = "AAPL"):
             tools = await session.list_tools()
             print(f"Found {len(tools.tools)} MCP tools")
 
-            # Call historical quote tool
+            # Call quote tool
             response = await session.call_tool(
-                "yfinance_get_historical_ohlcv",
-                arguments={"symbol": symbol, "range": "1mo", "interval": "1d"}
+                "alphavantage_GLOBAL_QUOTE",
+                arguments={"symbol": symbol}
             )
             data = json.loads(response.content[0].text)
-            print(f"Loaded {len(data)} normalized bars for {symbol}")
+            print(f"Loaded quote for {symbol}:", data)
 
 if __name__ == "__main__":
     asyncio.run(run_market_query("NVDA"))
